@@ -1,0 +1,9 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "[opentofu]": {
+        "editor.defaultFormatter": "opentofu.vscode-opentofu",
+        "editor.indentSize": 2
+    }
+}
