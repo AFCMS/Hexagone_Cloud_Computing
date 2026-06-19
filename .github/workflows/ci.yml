@@ -1,0 +1,28 @@
+---
+name: CI
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v2
+
+      - name: Init
+        run: tofu init
+
+      - name: Check Format
+        run: tofu fmt -check
+
+      - name: Validate
+        run: tofu validate
+
+      - name: Run Tests
+        run: tofu test
