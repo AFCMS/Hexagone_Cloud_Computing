@@ -5,7 +5,7 @@ locals {
 
   forgejo_image    = "codeberg.org/forgejo/forgejo:${var.forgejo_version}"
   forgejo_root_url = "http://${var.forgejo_domain}/"
-  postgres_image   = "postgres:18-alpine"
+  postgres_image   = "postgres:17-alpine"
   traefik_image    = "traefik:v3"
 
   vms = {
