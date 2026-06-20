@@ -2,6 +2,8 @@
 
 Automated OpenTofu/libvirt deployment of a containerized Forgejo application.
 
+[ASSIGNMENT REPORT](./RAPPORT.md)
+
 ## Architecture
 
 The lab creates three Ubuntu VMs on a libvirt NAT network. Each service runs in a Docker container deployed by cloud-init.
