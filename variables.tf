@@ -35,16 +35,10 @@ variable "ubuntu_image_url" {
   default     = "https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img"
 }
 
-variable "ssh_public_key_path" {
-  type        = string
-  description = "Optional SSH public key injected into the ubuntu user when the file exists."
-  default     = "~/.ssh/id_rsa.pub"
-}
-
 variable "forgejo_version" {
   type        = string
-  description = "Forgejo container version. 15.0.3 was the latest release checked on 2026-06-15."
-  default     = "15.0.3"
+  description = "Forgejo container version."
+  default     = "15"
 }
 
 variable "forgejo_domain" {
@@ -70,23 +64,4 @@ variable "forgejo_db_password" {
   description = "PostgreSQL password used by Forgejo. Override for non-lab use."
   sensitive   = true
   default     = "HexagoneForgejoDB2026"
-}
-
-variable "forgejo_admin_username" {
-  type        = string
-  description = "Initial Forgejo administrator username."
-  default     = "admin"
-}
-
-variable "forgejo_admin_email" {
-  type        = string
-  description = "Initial Forgejo administrator email."
-  default     = "admin@cc.local"
-}
-
-variable "forgejo_admin_password" {
-  type        = string
-  description = "Initial Forgejo administrator password. Override for non-lab use."
-  sensitive   = true
-  default     = "HexagoneForgejoAdmin2026"
 }

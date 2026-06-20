@@ -1,57 +1,56 @@
 # Hexagone - Cloud Computing
 
-Automated OpenTofu/libvirt deployment for the Cloud Computing assignment.
+Automated OpenTofu/libvirt deployment of a containerized Forgejo application.
 
-The lab creates three Ubuntu VMs on a libvirt NAT network and deploys the services with cloud-init and Docker:
+## Architecture
 
-| VM | IP | Role | Container |
-| --- | --- | --- | --- |
-| `cc-proxy` | `192.168.101.10` | Reverse proxy | Traefik |
-| `cc-app` | `192.168.101.20` | Web application | Forgejo `15.0.3` |
-| `cc-db` | `192.168.101.30` | Database | PostgreSQL 17 |
+The lab creates three Ubuntu VMs on a libvirt NAT network. Each service runs in a Docker container deployed by cloud-init.
+
+| VM         | IP               | Role            | Container  |
+| ---------- | ---------------- | --------------- | ---------- |
+| `cc-proxy` | `192.168.101.10` | Reverse proxy   | Traefik    |
+| `cc-app`   | `192.168.101.20` | Web application | Forgejo    |
+| `cc-db`    | `192.168.101.30` | Database        | PostgreSQL |
 
 Forgejo is exposed through Traefik at:
 
-```shell
+```text
 http://forgejo.cc.local/
 ```
 
-If your host does not resolve `forgejo.cc.local`, use the proxy IP with the host header:
+## Local DNS
+
+Add this line to `/etc/hosts` on the host machine:
+
+```text
+192.168.101.10 forgejo.cc.local
+```
+
+Without editing `/etc/hosts`, you can test through the proxy IP with an explicit Host header:
 
 ```shell
 curl -H 'Host: forgejo.cc.local' http://192.168.101.10/
 ```
 
-## Recreate The Lab
+## Deployment
 
-The simplest way to remove and recreate all VMs is:
-
-```shell
-tofu destroy -auto-approve
-tofu apply -auto-approve
-```
-
-This destroys the VMs, cloud-init ISOs, VM disks, and the `cc-lab` network, then recreates everything from the Terraform/OpenTofu files.
-
-The `ubuntu` user receives the local `~/.ssh/id_rsa.pub` key by default. Override it if needed:
+Apply the infrastructure:
 
 ```shell
-TF_VAR_ssh_public_key_path='~/.ssh/id_ed25519.pub' tofu apply
+tofu apply
 ```
 
-Useful validation commands:
+Destroy the infrastructure:
 
 ```shell
-tofu fmt -check
-tofu validate
-tofu plan
+tofu destroy
 ```
 
-## Local Libvirt Notes
+## Local libvirt notes
 
 This project defaults to Fedora's modular libvirt socket:
 
-```shell
+```text
 qemu:///system?socket=/var/run/libvirt/virtqemud-sock
 ```
 
@@ -61,50 +60,26 @@ If your host uses the legacy socket, override it:
 TF_VAR_libvirt_uri='qemu:///system' tofu apply
 ```
 
-This machine failed to start KVM acceleration, so the default domain type is `qemu`. On a host where KVM works, use:
+## Tests
+
+After `tofu apply`, wait a few minutes for cloud-init to install Docker and pull the container images.
+
+With `/etc/hosts` configured:
 
 ```shell
-TF_VAR_libvirt_domain_type='kvm' tofu apply
+curl -fsS -I http://forgejo.cc.local/
 ```
 
-## Smoke Tests
-
-After `tofu apply`, wait a few minutes for cloud-init to install Docker and pull images, then run:
+Without `/etc/hosts` configured:
 
 ```shell
 curl -fsS -H 'Host: forgejo.cc.local' http://192.168.101.10/
-curl -fsS -I http://192.168.101.20:3000/
-timeout 3 bash -c 'cat < /dev/null > /dev/tcp/192.168.101.30/5432'
 ```
 
 Expected result:
 
-- Traefik returns the Forgejo web page.
-- Forgejo answers directly on app port `3000`.
-- PostgreSQL accepts TCP connections on database port `5432`.
+- Traefik routes HTTP requests to the Forgejo container.
+- Forgejo can connect to PostgreSQL.
+- The Forgejo initial setup page is available in the browser.
 
-## Report Summary
-
-The architecture separates responsibilities into three VMs. The proxy VM is the public HTTP entry point and forwards requests to the app VM. The app VM runs Forgejo in a container and connects only to the database VM for persistence. The database VM runs PostgreSQL in a container with data stored on the VM disk.
-
-Network flows:
-
-- User to Traefik: `192.168.101.10:80`
-- Traefik to Forgejo: `192.168.101.20:3000`
-- Forgejo to PostgreSQL: `192.168.101.30:5432`
-- Optional Forgejo SSH: `192.168.101.20:2222`
-
-Technology choices:
-
-- OpenTofu makes the virtual infrastructure reproducible.
-- libvirt provides local VM virtualization with a simple NAT network.
-- Ubuntu 26.04 cloud images provide the VM base for cloud-init.
-- cloud-init installs Docker and starts services automatically on first boot.
-- Containers keep Traefik, Forgejo, and PostgreSQL isolated and easy to replace.
-- The three-VM split demonstrates a realistic proxy/app/database architecture without unnecessary complexity.
-
-Limitations:
-
-- HTTP is used instead of HTTPS to keep the lab simple.
-- There is no high availability; each role has one VM.
-- Passwords are lab defaults and should be overridden with `TF_VAR_*` variables outside a classroom demo.
+Open `http://forgejo.cc.local/` and create the initial Forgejo administrator account through the setup page.
