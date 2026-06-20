@@ -171,6 +171,8 @@ Test avec `/etc/hosts` configuré :
 curl -fsS -I http://forgejo.cc.local/
 ```
 
+On peut maintenant accéder à la page de setup initial de l'application depuis http://forgejo.cc.local
+
 ## 7. Analyse et justification des choix
 
 KVM/libvirt a été choisi car c'est une solution de virtualisation open source.
@@ -193,6 +195,10 @@ Les limites actuelles sont :
 - pas de sauvegarde automatique
 - pas de haute disponibilité
 - pas de supervision
+
+Un pipeline d'intégration continue est mis en place avec GitHub Actions dans `.github/workflows/ci.yml`.
+
+Il lance les commandes `tofu init`, `tofu fmt -check` et `tofu validate`.
 
 ## 8. Conclusion
 
